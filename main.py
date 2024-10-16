@@ -2,19 +2,17 @@ from flask import Flask, render_template_string, request, session, redirect, url
 import datetime
 import sqlite3
 import hashlib
-from mnemonic import Mnemonic  # Импортируем библиотеку для генерации сид-фразы
+from mnemonic import Mnemonic
 
 app = Flask(__name__)
 app.secret_key = 'null'
 
-mnemo = Mnemonic("english")  # Инициализируем объект для генерации сид-фраз
+mnemo = Mnemonic("english")
 
 def hash_phrase(phrase):
-    """Хэширует сид-фразу с помощью SHA256"""
     return hashlib.sha256(phrase.encode()).hexdigest()
 
 def get_user(public_key):
-    """Получает информацию о пользователе из базы данных"""
     con = sqlite3.connect('data.db')
     cur = con.cursor()
     cur.execute("SELECT * FROM users WHERE public_key = ?", (public_key,))
@@ -23,7 +21,6 @@ def get_user(public_key):
     return user
 
 def create_user(public_key, balance=0.0):
-    """Создаёт нового пользователя в базе данных"""
     con = sqlite3.connect('data.db')
     cur = con.cursor()
     cur.execute("INSERT INTO users (public_key, balance) VALUES (?, ?)", (public_key, balance))
@@ -31,7 +28,6 @@ def create_user(public_key, balance=0.0):
     con.close()
 
 def update_balance(public_key, amount):
-    """Обновляет баланс пользователя в базе данных"""
     con = sqlite3.connect('data.db')
     cur = con.cursor()
     cur.execute("UPDATE users SET balance = ? WHERE public_key = ?", (amount, public_key))
@@ -40,7 +36,6 @@ def update_balance(public_key, amount):
 
 @app.route("/register")
 def register_page():
-    """Страница регистрации"""
     return """
 <html>
     <head>
@@ -59,20 +54,17 @@ def register_page():
 
 @app.route("/register", methods=["POST"])
 def register():
-    """Обрабатывает регистрацию нового пользователя"""
-    # Генерация новой сид-фразы
-    phrase = mnemo.generate(strength=128)  # 12-словая сид-фраза
+    phrase = mnemo.generate(strength=128)
     public_key = hash_phrase(phrase)
     if not get_user(public_key):
         create_user(public_key)
         session['public_key'] = public_key
-        session['seed_phrase'] = phrase  # Храним сид-фразу в сессии для отображения
+        session['seed_phrase'] = phrase
         return redirect(url_for('show_seed'))
     return "Registration failed or user already exists"
 
 @app.route("/show_seed")
 def show_seed():
-    """Отображение сгенерированной сид-фразы для пользователя после регистрации"""
     if 'seed_phrase' in session:
         phrase = session['seed_phrase']
         return f"""
@@ -93,7 +85,6 @@ def show_seed():
 
 @app.route("/login")
 def login_page():
-    """Страница входа в систему"""
     return """
 <html>
     <head>
@@ -113,7 +104,6 @@ def login_page():
 
 @app.route("/login", methods=["POST"])
 def login():
-    """Обрабатывает вход в систему"""
     phrase = request.form.get("phrase")
     if phrase:
         public_key = hash_phrase(phrase)
@@ -124,13 +114,11 @@ def login():
 
 @app.route("/logout")
 def logout():
-    """Выход из системы"""
     session.pop('public_key', None)
     return redirect(url_for('login_page'))
 
 @app.route("/add")
 def addFunds():
-    """Добавляет средства на баланс пользователя"""
     if 'public_key' not in session:
         return redirect(url_for('login_page'))
 
@@ -147,7 +135,6 @@ def addFunds():
 
 @app.route("/send")
 def sendFunds():
-    """Отправляет средства другому пользователю"""
     if 'public_key' not in session:
         return redirect(url_for('login_page'))
 
@@ -168,7 +155,6 @@ def sendFunds():
 
 @app.route("/")
 def index():
-    """Отображает главную страницу с балансом и транзакциями"""
     if 'public_key' not in session:
         return redirect(url_for('login_page'))
 
