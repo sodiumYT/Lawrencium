@@ -7,8 +7,6 @@ from mnemonic import Mnemonic  # Импортируем библиотеку д�
 app = Flask(__name__)
 app.secret_key = 'idk_but_sod1um_is_cool'
 
-transactions = []
-
 mnemo = Mnemonic("english")  # Инициализируем объект для генерации сид-фраз
 
 def hash_phrase(phrase):
@@ -135,7 +133,7 @@ def addFunds():
     """Добавляет средства на баланс пользователя"""
     if 'public_key' not in session:
         return redirect(url_for('login_page'))
-    
+
     try:
         amount = float(request.args.get('amount'))
         public_key = session['public_key']
@@ -158,8 +156,6 @@ def sendFunds():
         amount = float(request.args.get('amount'))
         sender_key = session['public_key']
         if amount <= get_user(sender_key)[1]:
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            transactions.append(f"<div class='transaction'><strong>To:</strong> {recipient_key}<br><strong>Amount:</strong> {amount} LWC<br><strong>Date:</strong> {timestamp}</div><br>-----------------<br><br>")
             sender_balance = get_user(sender_key)[1] - amount
             update_balance(sender_key, sender_balance)
             recipient_user = get_user(recipient_key)
@@ -180,9 +176,9 @@ def index():
     user = get_user(public_key)
     if user:
         balance = user[1]
-    
-    transactions_html = "<div class='transaction-list'>" + "".join(transactions) + "</div>" if transactions else "No transactions yet."
-    
+
+    transactions_html =  "No transactions yet."
+
     return f"""
 <html lang="en">
     <head>
@@ -270,4 +266,4 @@ if __name__ == '__main__':
     ''')
     con.commit()
     con.close()
-    app.run(debug=True)
+    app.run(host="0.0.0.0")
