@@ -5,7 +5,7 @@ import hashlib
 from mnemonic import Mnemonic  # Импортируем библиотеку для генерации сид-фразы
 
 app = Flask(__name__)
-app.secret_key = 'idk_but_sod1um_is_cool'
+app.secret_key = 'null'
 
 mnemo = Mnemonic("english")  # Инициализируем объект для генерации сид-фраз
 
